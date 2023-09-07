@@ -4,7 +4,7 @@ import UserModel from "../models/user.model";
 import { Post } from "../../types";
 
 const URL = process.env.NODE_ENV === "production"
-? "https://tuapp.com"
+? "https://blogposts.up.railway.app/"
 : "http://localhost:5173";
 
 const resend = new Resend("re_S4bFDWfw_8uWrxExsZVtyP9JPFjy5r83H");
