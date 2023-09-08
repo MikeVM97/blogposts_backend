@@ -100,7 +100,9 @@ export async function login(req: Request, res: Response) {
     });
 
     res.cookie("accessToken", accessToken, {
-      sameSite: 'none',
+      httpOnly: process.env.NODE_ENV !== "development",
+      secure: true,
+      sameSite: "none",
     });
 
     res.json(userFound);
