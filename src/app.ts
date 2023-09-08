@@ -30,7 +30,7 @@ const app = express();
 }); */
 
 const URL = process.env.NODE_ENV === "production"
-? "https://blogposts.up.railway.app/"
+? "https://blogposts-frontend.vercel.app/"
 : "http://localhost:5173";
 
 const PORT = Number(process.env.PORT) || 8080;
