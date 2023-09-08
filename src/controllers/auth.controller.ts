@@ -9,7 +9,7 @@ import "dotenv/config";
 const resend = new Resend("re_S4bFDWfw_8uWrxExsZVtyP9JPFjy5r83H");
 
 const URL = process.env.NODE_ENV === "production"
-? "https://blogposts.up.railway.app/"
+? "https://blogposts.up.railway.app"
 : "http://localhost:5173";
 
 export async function register(req: Request, res: Response, next: NextFunction) {
