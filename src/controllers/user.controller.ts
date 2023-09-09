@@ -5,7 +5,7 @@ import { Post } from "../../types";
 
 const URL = process.env.NODE_ENV === "production"
 ? "https://blogposts.up.railway.app"
-: "http://localhost:5173";
+: "http://localhost:3000";
 
 const resend = new Resend("re_S4bFDWfw_8uWrxExsZVtyP9JPFjy5r83H");
 

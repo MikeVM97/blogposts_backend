@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { Resend } from "resend";
 import { createAccessToken } from "../libs/jwt";
 import UserModel from "../models/user.model";
@@ -10,9 +10,9 @@ const resend = new Resend("re_S4bFDWfw_8uWrxExsZVtyP9JPFjy5r83H");
 
 const URL = process.env.NODE_ENV === "production"
 ? "https://blogposts.up.railway.app"
-: "http://localhost:5173";
+: "http://localhost:3000";
 
-export async function register(req: Request, res: Response, next: NextFunction) {
+export async function register(req: Request, res: Response) {
   try {
     const { email, gender, password, password2, username } = req.body;
 
