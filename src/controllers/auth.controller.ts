@@ -102,7 +102,7 @@ export async function login(req: Request, res: Response) {
     res.cookie("accessToken", accessToken, {
       httpOnly: process.env.NODE_ENV !== "development",
       secure: true,
-      sameSite: "none",
+      sameSite: "lax",
     });
 
     res.json(userFound);
