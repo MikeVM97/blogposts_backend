@@ -105,8 +105,6 @@ export async function login(req: Request, res: Response) {
       sameSite: "none",
     });
 
-    //
-
     res.json(userFound);
   } catch (error) {
     if (error instanceof Error) {
@@ -116,10 +114,8 @@ export async function login(req: Request, res: Response) {
 }
 
 export function logout(_req: Request, res: Response) {
-  res.cookie('accessToken', '', {
-    expires: new Date(0),
-  });
-  return res.sendStatus(200);
+  res.clearCookie('accessToken');
+  res.sendStatus(200);
 }
 
 export async function verifyToken(req: Request, res: Response) {
