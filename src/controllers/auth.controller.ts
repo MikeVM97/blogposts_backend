@@ -105,6 +105,8 @@ export async function login(req: Request, res: Response) {
       sameSite: "none",
     });
 
+    //
+
     res.json(userFound);
   } catch (error) {
     if (error instanceof Error) {
