@@ -114,7 +114,11 @@ export async function login(req: Request, res: Response) {
 }
 
 export function logout(_req: Request, res: Response) {
-  res.clearCookie('accessToken');
+  res.cookie("accessToken", "", {
+    httpOnly: true,
+    secure: true,
+    expires: new Date(0),
+  });
   res.sendStatus(200);
 }
 
