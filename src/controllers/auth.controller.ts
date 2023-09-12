@@ -113,11 +113,11 @@ export async function login(req: Request, res: Response) {
   }
 }
 
-export function logout(_req: Request, res: Response) {
-  res.cookie("accessToken", "", {
-    httpOnly: true,
+export function logout(req: Request, res: Response) {
+  res.clearCookie("accessToken", {
+    httpOnly: process.env.NODE_ENV !== "development",
     secure: true,
-    expires: new Date(0),
+    sameSite: "none",
   });
   res.sendStatus(200);
 }
