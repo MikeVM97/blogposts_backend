@@ -51,6 +51,15 @@ app.get('/users', (_req, res) => {
   .catch(err => console.log(err));
 });
 
+const response = `<div style="font-size: 2rem; display: flex; flex-direction: column; row-gap: 10px; width: fit-content; margin: auto;">
+      <p>¡ Su cuenta ha sido activada !</p>
+      <p>Ya puedes cerrar esta página.</p>
+    </div>`
+
+app.get('/', (req, res) => {
+  res.send(response);
+})
+
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/user', userRoutes);
