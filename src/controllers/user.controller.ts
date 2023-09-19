@@ -1,13 +1,11 @@
 import { Request, Response } from "express";
-import { Resend } from "resend";
 import UserModel from "../models/user.model";
 import { Post } from "../../types";
+import nodemailer from "nodemailer";
 
 const URL = process.env.NODE_ENV === "production"
 ? "https://blogposts.up.railway.app"
 : "http://localhost:3000";
-
-const resend = new Resend("re_S4bFDWfw_8uWrxExsZVtyP9JPFjy5r83H");
 
 export async function updateProfileImage(req: Request, res: Response) {
   try {
@@ -64,22 +62,41 @@ export async function verifyAccount(req: Request, res: Response) {
 export async function resendEmail(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const { email } = req.body;
-    const html = `<div>
-      <p>¡Hola!</p>
+    const { email, username } = req.body;
+    const mail = `<div>
+      <p>¡Hola ${username}!</p>
       <p>Para verificar tu cuenta, haz click en el siguiente enlace:</p>
       <p>${URL}/api/user/verifyaccount/${id}</p>
       <p>Si no fuiste tu quien registró esta cuenta, ignora este correo electrónico.</p>
     </div>`;
 
-    await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
-      to: [email],
-      subject: "Verificación de cuenta",
-      html: html,
+    const response = `<div style="font-size: 2rem; display: flex; flex-direction: column; row-gap: 20px; width: fit-content; margin: auto;">
+      <p>¡ Su cuenta ha sido activada !</p>
+      <p>Ya puedes cerrar esta página.</p>
+    </div>`
+
+    const mailTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      auth: {
+        user: 'vivancomayta@gmail.com',
+        pass: 'lurlwpeuhwnqomdw'
+      }
     });
 
-    res.sendStatus(200);
+    mailTransporter.sendMail({
+      from: 'vivancomayta@gmail.com',
+      to: email,
+      subject: 'Verificación de cuenta',
+      html: mail,
+    }, (err, data) => {
+      if(err) {
+        console.log(err);
+        return res.status(400);
+      } else {
+        return res.send(response);
+      }
+    });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ message: "Un error ha ocurrido." });

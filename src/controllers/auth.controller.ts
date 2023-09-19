@@ -1,12 +1,10 @@
-import { Request, Response } from "express";
-import { Resend } from "resend";
+import { NextFunction, Request, Response } from "express";
 import { createAccessToken } from "../libs/jwt";
 import UserModel from "../models/user.model";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
 import "dotenv/config";
-
-const resend = new Resend("re_S4bFDWfw_8uWrxExsZVtyP9JPFjy5r83H");
 
 const URL = process.env.NODE_ENV === "production"
 ? "https://blogposts.up.railway.app"
@@ -52,21 +50,40 @@ export async function register(req: Request, res: Response) {
     
     await newUser.save();
 
-    const html = `<div>
-      <p>¡Hola!</p>
+    const mail = `<div>
+      <p>¡Hola ${newUser.username}!</p>
       <p>Para verificar tu cuenta, haz click en el siguiente enlace:</p>
       <p>${URL}/api/user/verifyaccount/${newUser.id}</p>
       <p>Si no fuiste tu quien registró esta cuenta, ignora este correo electrónico.</p>
     </div>`;
 
-    await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
-      to: [newUser.email],
-      subject: "Verificación de cuenta",
-      html: html,
+    const response = `<div style="font-size: 2rem; display: flex; flex-direction: column; row-gap: 20px; width: fit-content; margin: auto;">
+      <p>¡ Su cuenta ha sido activada !</p>
+      <p>Ya puedes cerrar esta página.</p>
+    </div>`
+
+    const mailTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      auth: {
+        user: 'vivancomayta@gmail.com',
+        pass: 'lurlwpeuhwnqomdw',
+      },
     });
 
-    res.sendStatus(200);
+    mailTransporter.sendMail({
+      from: 'vivancomayta@gmail.com',
+      to: newUser.email,
+      subject: 'Verificación de cuenta',
+      html: mail,
+    }, (err, data) => {
+      if(err) {
+        console.log(err);
+        return res.status(400).json({ message: 'Error al envíar correo de verificación' });
+      } else {
+        return res.send(response);
+      }
+    });
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ message: error.message });
@@ -79,7 +96,7 @@ export async function login(req: Request, res: Response) {
     const { email, password } = req.body;
 
     const userFound = await UserModel.findOne({ email });
-
+        
     if (!userFound) {
       return res.status(400).json({
         message: ["Email no registrado, intente con otro."],
@@ -92,6 +109,10 @@ export async function login(req: Request, res: Response) {
       return res.status(400).json({
         message: ["Contraseña incorrecta."],
       });
+    }
+
+    if (!userFound.isVerified) {
+      return res.status(400).json({ not_verified: ["Es necesario verificar su cuenta para poder ingresar."], id: userFound.id, username: userFound.username });
     }
 
     const accessToken = await createAccessToken({
@@ -122,12 +143,12 @@ export function logout(req: Request, res: Response) {
   res.sendStatus(200);
 }
 
-export async function verifyToken(req: Request, res: Response) {
+export async function verifyToken(req: Request, res: Response, next: NextFunction) {
   const { accessToken } = req.cookies;
 
   const secret: string = process.env.ACCESS_TOKEN_SECRET as string;
 
-  if (!accessToken) return res.send({ message: 'No token found' });
+  if (!accessToken) return res.send({ message: 'Sin token de acceso, usuario no autenticado.' });
 
   jwt.verify(accessToken, secret, async (error: unknown, user: any) => {
     /* user = {
@@ -143,10 +164,13 @@ export async function verifyToken(req: Request, res: Response) {
 
     if (!userFound) return res.sendStatus(401);
     
-    return res.json({
+    /* res.json({
       userId: userFound.id,
       email: userFound.email,
       username: userFound.username,
-    });
+    }); */
+
+    next();
   });
 }
+
