@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { createAccessToken } from "../libs/jwt";
 import UserModel from "../models/user.model";
 import jwt from "jsonwebtoken";
@@ -57,11 +57,6 @@ export async function register(req: Request, res: Response) {
       <p>Si no fuiste tu quien registró esta cuenta, ignora este correo electrónico.</p>
     </div>`;
 
-    const response = `<div style="font-size: 2rem; display: flex; flex-direction: column; row-gap: 20px; width: fit-content; margin: auto;">
-      <p>¡ Su cuenta ha sido activada !</p>
-      <p>Ya puedes cerrar esta página.</p>
-    </div>`
-
     const mailTransporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
@@ -81,7 +76,7 @@ export async function register(req: Request, res: Response) {
         console.log(err);
         return res.status(400).json({ message: 'Error al envíar correo de verificación' });
       } else {
-        return res.send(response);
+        return res.sendStatus(200);
       }
     });
   } catch (error) {

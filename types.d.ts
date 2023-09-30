@@ -10,13 +10,13 @@ export interface User {
 }
 
 export interface Post {
-  title: string;
-  body: string;
   author: string;
+  body: string;
   date: string;
-  postId: string;
   photoUrl: string;
+  postId: string;
   reactions: Reactions;
+  title: string;
 }
 
 export interface Reactions {

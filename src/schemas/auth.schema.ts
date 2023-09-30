@@ -7,12 +7,12 @@ export const RegisterSchema = object({
   ]),
   gender: string(),
   password: string([
-    minLength(7, "Se requieren almenos 7 caracteres para la contraseña."),
+    minLength(7, "Se requieren es demasiado corta."),
     maxLength(16, "La contraseña es demasiado larga."),
     regex(/^[A-Z0-9]+$/i, "La contraseña solo puede tener letras y números."),
   ]),
   password2: string([
-    minLength(7, "Se requieren almenos 7 caracteres para la constraseña."),
+    minLength(7, "Se requieren es demasiado corta."),
     maxLength(16, "La contraseña es demasiado larga."),
     regex(/^[A-Z0-9]+$/i, "La contraseña solo puede tener letras y números."),
   ]),

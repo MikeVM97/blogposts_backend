@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes";
 import postsRoutes from "./routes/posts.routes";
 import userRoutes from "./routes/user.routes";
+import dbRoutes from "./routes/db.routes";
 
 import UserModel from "./models/user.model";
 
@@ -63,6 +64,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/user', userRoutes);
+app.use('/delete', dbRoutes);
 
 app.listen(PORT, function () {
   console.log(`Backend is running on port ${PORT}`);
