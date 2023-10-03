@@ -8,11 +8,9 @@ const dbname = "users";
 
 const MONGODB_URI = `mongodb+srv://${username}:${password}@${cluster}.mongodb.net/${dbname}?retryWrites=true&w=majority`;
 
-const x = "mongodb://mongo:kkkFHosDlv2ojwE5ybM4@containers-us-west-130.railway.app:7354";
-
 export default async function connectDB() {
   try {
-    await mongoose.connect(x);
+    await mongoose.connect(MONGODB_URI);
     console.log("MongoDB is connected");
   } catch (error) {
     console.error(error);

@@ -46,26 +46,38 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-app.get('/users', (_req, res) => {
-  UserModel.find({})
-  .then(users => res.json(users))
-  .catch(err => console.log(err));
+/* GET DB DATA */
+app.post('/users', async (req, res) => {
+  try {
+    const usersDB = await UserModel.find({});
+    return res.json(usersDB);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ message: 'Un error ha ocurrido: ' + error.message });
+    }
+  }
 });
 
-const response = `<div style="font-size: 2rem; display: flex; flex-direction: column; row-gap: 10px; width: fit-content; margin: auto;">
-      <p>¡ Su cuenta ha sido activada !</p>
-      <p>Ya puedes cerrar esta página.</p>
-    </div>`
-
-app.get('/', (req, res) => {
-  res.send(response);
-})
-
+/* ROUTES */
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/user', userRoutes);
 app.use('/delete', dbRoutes);
 
-app.listen(PORT, function () {
+/* SEND HTML TEXT EXAMPLE */
+app.get('/', (req, res) => {
+  return res.send('<h1 style="text-align: center;">Welcome to my Backend Application</h1>');
+});
+
+/* SEND HTML FILE EXAMPLE */
+const path = require('path');
+
+app.use(express.static(path.join(__dirname, '..', 'build')));
+
+app.get('/public', (req, res) => {
+  return res.sendFile(path.join(__dirname, '..', 'build', 'index.html'));
+});
+
+app.listen(PORT, function() {
   console.log(`Backend is running on port ${PORT}`);
 });
