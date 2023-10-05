@@ -27,10 +27,8 @@ export async function createPost(req: Request, res: Response) {
     const d = format(new Date(), 'dd-MM-yyyy');
 
     const post = {
-      author: userFound.username,
       body,
       date: `comentado en ${parseDate(d)}`,
-      photoUrl: userFound.photoUrl,
       postId: (Number(lastPostId) + 1).toString(),
       reactions: {
         thumbsUp: {
@@ -89,6 +87,15 @@ export async function updatePost(req: Request, res: Response) {
 
     const d = format(new Date(), 'dd-MM-yyyy');
 
+    const usersDB = await UserModel.find({});
+
+    const postsOrdered = usersDB
+    .map((user) => user.posts)
+    .flat()
+    .sort((a, b) => Number(b.postId) - Number(a.postId));
+
+    const lastPostId = postsOrdered[0].postId ?? '0';
+
     const posts = userFound.posts;
     const newPosts = posts.map((post: Post) => {
       if (post.postId === postId) {
@@ -97,6 +104,7 @@ export async function updatePost(req: Request, res: Response) {
           title,
           body,
           date: `editado en ${parseDate(d)}`,
+          postId: (Number(lastPostId) + 1).toString(),
         }
       } else {
         return post;
@@ -162,7 +170,7 @@ export async function updateReactions(req: Request, res: Response) {
     }
   } catch (error) {
     if (error instanceof Error) {
-      res.status(500).json({ message: "Error al crear post" });
+      return res.status(500).json({ message: "Error al crear post" });
     }
   }
 }

@@ -12,6 +12,10 @@ import UserModel from "./models/user.model";
 import connectDB from "./mongodb";
 
 import "dotenv/config";
+
+import { User, Post } from "../types"
+
+import strToDate from "./libs/parseDate";
 // import { Server } from "socket.io";
 // import http from "http";
 
@@ -46,8 +50,22 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-/* GET DB DATA */
-app.post('/users', async (req, res) => {
+/* GET POSTS DB */
+app.get('/posts', async (req, res) => {
+  try {
+    const usersDB = await UserModel.find({});
+    if (!usersDB) return res.status(400).json({ message: 'Cannot get DB' });
+    const postsOrdered = usersDB.map(user => user.posts).flat()
+    .sort((a, b) => Number(b.postId) - Number(a.postId));
+    return res.json({ postsOrdered });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ message: 'Un error ha ocurrido: ' + error.message });
+    }
+  }
+});
+
+app.get('/users', async (req, res) => {
   try {
     const usersDB = await UserModel.find({});
     return res.json(usersDB);

@@ -37,30 +37,9 @@ export async function updateProfile(req: Request, res: Response) {
 
     if (newProfile !== userFound.photoUrl) {
       await UserModel.findByIdAndUpdate(id, { photoUrl: newProfile });
-      const posts: Post[] | [] = userFound!.posts;
-      if (posts.length > 0) {
-        const newPosts: Post[] = posts.map((post: Post) => {
-          return {
-            ...post,
-            photoUrl: newProfile,
-          }
-        });
-        await UserModel.findByIdAndUpdate(id, { posts: newPosts });
-      }
     }
 
     await UserModel.findByIdAndUpdate(id, { username: newUsername });
-
-    /* const posts: Post[] | [] = userFound!.posts;
-    if (posts.length > 0) {
-      const newPosts: Post[] = posts.map((post: Post) => {
-        return {
-          ...post,
-          author: newUsername,
-        }
-      });
-      await UserModel.findByIdAndUpdate(id, { posts: newPosts });
-    } */
 
     usersDB.forEach(async (user) => {
       let newPosts: Post[] = user.posts;
@@ -82,12 +61,6 @@ export async function updateProfile(req: Request, res: Response) {
                 }
               }
             }
-          }
-        }
-        if (user.id === id) {
-          currentPost = {
-            ...currentPost,
-            author: newUsername,
           }
         }
         newPosts = newPosts.map((n: Post) => {
@@ -226,7 +199,53 @@ export async function updateReactions(req: Request, res: Response) {
     return res.sendStatus(200);
   } catch (error) {
     if (error instanceof Error) {
-      res.sendStatus(500).json({ message: ["Error al actualizar imagen de perfil"] });
+      return res.sendStatus(500).json({ message: ["Error al actualizar imagen de perfil"] });
+    }
+  }
+}
+
+export async function getProfileImage(req: Request, res: Response) {
+  try {
+    const { postId } = req.params;
+    const usersDB = await UserModel.find({});
+    if (!usersDB) return res.status(400).json({ message: 'Cannot get DB' });
+    const userFound = usersDB.find((user) => user.posts.some((post) => post.postId === postId));
+    if (!userFound) return res.status(400).json({ message: 'User not found' });
+    if (userFound.photoUrl !== 'blank') return res.status(200).json({ photoURL: userFound.photoUrl });
+    return res.status(200).json({ gender: userFound.gender });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.sendStatus(500).json({ message: "Error al obtener imagen de perfil" });
+    }
+  }
+}
+
+export async function getUserId(req: Request, res: Response){
+  try {
+    const { postId } = req.params;
+    const usersDB = await UserModel.find({});
+    if (!usersDB) return res.status(400).json({ message: 'Cannot get DB' });
+    const userFound = usersDB.find((user) => user.posts.some((post) => post.postId === postId));
+    if (!userFound) return res.status(400).json({ message: 'User not found' });
+    return res.status(200).json({ id: userFound.id });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.sendStatus(500).json({ message: "Error al obtener imagen de perfil" });
+    }
+  }
+}
+
+export async function getAuthor(req: Request, res: Response) {
+  try {
+    const { postId } = req.params;
+    const usersDB = await UserModel.find({});
+    if (!usersDB) return res.status(400).json({ message: 'Cannot get DB' });
+    const userFound = usersDB.find((user) => user.posts.some((post) => post.postId === postId));
+    if (!userFound) return res.status(400).json({ message: 'User not found' });
+    return res.status(200).json({ author: userFound.username });
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.sendStatus(500).json({ message: "Error al obtener imagen de perfil" });
     }
   }
 }

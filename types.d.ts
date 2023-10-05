@@ -10,10 +10,8 @@ export interface User {
 }
 
 export interface Post {
-  author: string;
   body: string;
   date: string;
-  photoUrl: string;
   postId: string;
   reactions: Reactions;
   title: string;
@@ -49,4 +47,19 @@ export interface Reactions {
 export interface UpdateReactions {
   post: Post;
   userId: string;
+}
+
+export interface Months {
+  Enero: number;
+  Febrero: number;
+  Marzo: number;
+  Abril: number;
+  Mayo: number;
+  Junio: number;
+  Julio: number;
+  Agosto: number;
+  Septiembre: number;
+  Octubre: number;
+  Noviembre: number;
+  Diciembre: number;
 }
