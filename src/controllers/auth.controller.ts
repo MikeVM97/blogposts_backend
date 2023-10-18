@@ -1,10 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { createAccessToken } from "../libs/jwt";
 import UserModel from "../models/user.model";
-import jwt from "jsonwebtoken";
+import jwt, { JsonWebTokenError, VerifyErrors, VerifyOptions } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import "dotenv/config";
+
+interface JWTError {
+  name: string;
+  message: string;
+  expireAt: string;
+}
 
 const URL = process.env.NODE_ENV === "production"
 ? "https://blogposts.up.railway.app"
@@ -111,8 +117,13 @@ export async function login(req: Request, res: Response) {
     }
 
     const accessToken = await createAccessToken({
-      userId: userFound?.id,
-      username: userFound?.username,
+      email: userFound.email,
+      gender: userFound.gender,
+      id: userFound.id,
+      isVerified: userFound.isVerified,
+      photoUrl: userFound.photoUrl,
+      posts: userFound.posts,
+      username: userFound.username,
     });
 
     res.cookie("accessToken", accessToken, {
@@ -121,7 +132,7 @@ export async function login(req: Request, res: Response) {
       sameSite: "none",
     });
 
-    res.json(userFound);
+    return res.json(userFound);
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ message: error.message });
@@ -129,21 +140,46 @@ export async function login(req: Request, res: Response) {
   }
 }
 
-export function logout(req: Request, res: Response) {
-  res.clearCookie("accessToken", {
-    httpOnly: process.env.NODE_ENV !== "development",
-    secure: true,
-    sameSite: "none",
-  });
-  res.sendStatus(200);
+export async function logout(req: Request, res: Response) {
+  try {
+    const { accessToken } = req.cookies;
+    if (!accessToken) return res.status(401).json({ message: 'Sin token de acceso' });
+    const secret: string = process.env.ACCESS_TOKEN_SECRET as string;
+    jwt.verify(accessToken, secret, async (error: unknown, user: any) => {
+      /* user = {
+        "userId": "64d52746c0544001c962bae4",
+        "username": "Mike",
+        "iat": 1693768508,
+        "exp": 1693772108
+      } */
+      if (error) return res.status(401).json({ message: 'El token de acceso ha expirado' });
+      const userFound = await UserModel.findById(user.userId);
+      if (!userFound) return res.status(401).json({  message: 'User not found' });
+      /* res.json({
+        userId: userFound.id,
+        email: userFound.email,
+        username: userFound.username,
+      }); */
+    });
+    res.clearCookie("accessToken", {
+      httpOnly: process.env.NODE_ENV !== "development",
+      secure: true,
+      sameSite: "none",
+    });
+    return res.sendStatus(200);
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({ message: error });
+    }
+  }
 }
 
-export async function verifyToken(req: Request, res: Response, next: NextFunction) {
+export async function verifyToken(req: Request, res: Response) {
   const { accessToken } = req.cookies;
 
   const secret: string = process.env.ACCESS_TOKEN_SECRET as string;
 
-  if (!accessToken) return res.send({ message: 'Sin token de acceso, usuario no autenticado.' });
+  if (!accessToken) return res.status(401).json({ message: 'Sin token de acceso' });
 
   jwt.verify(accessToken, secret, async (error: unknown, user: any) => {
     /* user = {
@@ -152,20 +188,15 @@ export async function verifyToken(req: Request, res: Response, next: NextFunctio
       "iat": 1693768508,
       "exp": 1693772108
     } */
-
-    if (error) return res.sendStatus(401);
-    
-    const userFound = await UserModel.findById(user.userId);
-
-    if (!userFound) return res.sendStatus(401);
-    
+    if (error) return res.status(401).json({ message: 'El token de acceso ha expirado' });
+    const userFound = await UserModel.findById(user.id);
+    if (!userFound) return res.status(401).json({  message: 'User not found' });
     /* res.json({
       userId: userFound.id,
       email: userFound.email,
       username: userFound.username,
     }); */
-
-    next();
+    return res.status(200).json(userFound);
   });
 }
 
