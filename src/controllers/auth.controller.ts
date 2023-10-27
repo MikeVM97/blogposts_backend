@@ -142,25 +142,6 @@ export async function login(req: Request, res: Response) {
 
 export async function logout(req: Request, res: Response) {
   try {
-    const { accessToken } = req.cookies;
-    if (!accessToken) return res.status(401).json({ message: 'Sin token de acceso' });
-    const secret: string = process.env.ACCESS_TOKEN_SECRET as string;
-    jwt.verify(accessToken, secret, async (error: unknown, user: any) => {
-      /* user = {
-        "userId": "64d52746c0544001c962bae4",
-        "username": "Mike",
-        "iat": 1693768508,
-        "exp": 1693772108
-      } */
-      if (error) return res.status(401).json({ message: 'El token de acceso ha expirado' });
-      const userFound = await UserModel.findById(user.userId);
-      if (!userFound) return res.status(401).json({  message: 'User not found' });
-      /* res.json({
-        userId: userFound.id,
-        email: userFound.email,
-        username: userFound.username,
-      }); */
-    });
     res.clearCookie("accessToken", {
       httpOnly: process.env.NODE_ENV !== "development",
       secure: true,
