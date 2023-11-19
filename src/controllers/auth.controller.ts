@@ -1,10 +1,13 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { createAccessToken } from "../libs/jwt";
 import UserModel from "../models/user.model";
-import jwt, { JsonWebTokenError, VerifyErrors, VerifyOptions } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import nodemailer from "nodemailer";
+import { createTransport } from "nodemailer";
 import "dotenv/config";
+
+const mailUser = process.env.MAIL_USER;
+const mailPassword = process.env.MAIL_PASSWORD;
 
 interface JWTError {
   name: string;
@@ -12,9 +15,10 @@ interface JWTError {
   expireAt: string;
 }
 
-const URL = process.env.NODE_ENV === "production"
-? "https://blogposts.up.railway.app"
-: "http://localhost:3000";
+const URL =
+  process.env.NODE_ENV === "production"
+    ? "https://blogposts.up.railway.app"
+    : "http://localhost:3000";
 
 export async function register(req: Request, res: Response) {
   try {
@@ -53,7 +57,7 @@ export async function register(req: Request, res: Response) {
       posts: [],
       username,
     });
-    
+
     await newUser.save();
 
     const mail = `<div>
@@ -63,28 +67,33 @@ export async function register(req: Request, res: Response) {
       <p>Si no fuiste tu quien registró esta cuenta, ignora este correo electrónico.</p>
     </div>`;
 
-    const mailTransporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+    const mailTransporter = createTransport({
+      host: "smtp.gmail.com",
       port: 587,
       auth: {
-        user: 'vivancomayta@gmail.com',
-        pass: 'lurlwpeuhwnqomdw',
+        user: mailUser,
+        pass: mailPassword,
       },
     });
 
-    mailTransporter.sendMail({
-      from: 'vivancomayta@gmail.com',
-      to: newUser.email,
-      subject: 'Verificación de cuenta',
-      html: mail,
-    }, (err, data) => {
-      if(err) {
-        console.log(err);
-        return res.status(400).json({ message: 'Error al envíar correo de verificación' });
-      } else {
-        return res.sendStatus(200);
+    mailTransporter.sendMail(
+      {
+        from: mailUser,
+        to: newUser.email,
+        subject: "Verificación de cuenta",
+        html: mail,
+      },
+      (err, data) => {
+        if (err) {
+          console.log(err);
+          return res
+            .status(400)
+            .json({ message: "Error al envíar correo de verificación" });
+        } else {
+          return res.sendStatus(200);
+        }
       }
-    });
+    );
   } catch (error) {
     if (error instanceof Error) {
       return res.status(500).json({ message: error.message });
@@ -97,7 +106,7 @@ export async function login(req: Request, res: Response) {
     const { email, password } = req.body;
 
     const userFound = await UserModel.findOne({ email });
-        
+
     if (!userFound) {
       return res.status(400).json({
         message: ["Email no registrado, intente con otro."],
@@ -113,7 +122,11 @@ export async function login(req: Request, res: Response) {
     }
 
     if (!userFound.isVerified) {
-      return res.status(400).json({ not_verified: ["Es necesario verificar su cuenta para poder ingresar."], id: userFound.id, username: userFound.username });
+      return res.status(400).json({
+        not_verified: ["Es necesario verificar su cuenta para poder ingresar."],
+        id: userFound.id,
+        username: userFound.username,
+      });
     }
 
     const accessToken = await createAccessToken({
@@ -160,7 +173,8 @@ export async function verifyToken(req: Request, res: Response) {
 
   const secret: string = process.env.ACCESS_TOKEN_SECRET as string;
 
-  if (!accessToken) return res.status(401).json({ message: 'Sin token de acceso' });
+  if (!accessToken)
+    return res.status(401).json({ message: "Sin token de acceso" });
 
   jwt.verify(accessToken, secret, async (error: unknown, user: any) => {
     /* user = {
@@ -169,9 +183,12 @@ export async function verifyToken(req: Request, res: Response) {
       "iat": 1693768508,
       "exp": 1693772108
     } */
-    if (error) return res.status(401).json({ message: 'El token de acceso ha expirado' });
+    if (error)
+      return res
+        .status(401)
+        .json({ message: "El token de acceso ha expirado" });
     const userFound = await UserModel.findById(user.id);
-    if (!userFound) return res.status(401).json({  message: 'User not found' });
+    if (!userFound) return res.status(401).json({ message: "User not found" });
     /* res.json({
       userId: userFound.id,
       email: userFound.email,
@@ -180,4 +197,3 @@ export async function verifyToken(req: Request, res: Response) {
     return res.status(200).json(userFound);
   });
 }
-
